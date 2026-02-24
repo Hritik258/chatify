@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-
+import { serverUrl } from '../main';
 import dp from "../assets/dp.webp";
 import { IoIosSearch } from "react-icons/io";
 import { BiLogOutCircle } from "react-icons/bi";

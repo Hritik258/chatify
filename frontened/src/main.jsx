@@ -5,10 +5,10 @@ import App from './App.jsx'
 import { BrowserRouter } from 'react-router-dom'
 import { Provider } from "react-redux"
 import { store } from './redux/store.js'
-import axios from "axios"   // ✅ ADD
+import axios from "axios"
 
-export const serverUrl = "http://localhost:8000"
-
+// ✅ Use VITE_SERVER_URL from environment, fallback to localhost for development
+export const serverUrl = import.meta.env.VITE_SERVER_URL || "http://localhost:8000"
 
 axios.defaults.withCredentials = true
 

@@ -10,6 +10,7 @@ import EmojiPicker from "emoji-picker-react";
 import Sendermessage from "./Sendermessage";
 import ReceiverMessage from "./ReceiverMessage";
 import axios from "axios";
+import { serverUrl } from '../main';
 
 function Messagearea() {
   const { selectedUser, userData } = useSelector((state) => state.user);
@@ -65,11 +66,7 @@ function Messagearea() {
         formData.append("image", imageFile);
       }
 
-      const response = await axios.post(
-        `http://localhost:8000/api/message/send/${selectedUser._id}`,
-        formData,
-        { withCredentials: true }
-      );
+      const response = await axios.post(`${serverUrl}/api/message/send/${selectedUser._id}`, formData, { withCredentials: true })
 
       
       dispatch(setMessage([...messages, response.data]));

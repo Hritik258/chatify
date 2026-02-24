@@ -1,5 +1,5 @@
-// App.jsx - Complete updated version
-import React, { useEffect, useRef } from 'react';
+// App.jsx - Complete updated version with dynamic backend URL
+import React, { useEffect } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import SignUp from './pages/SignUp';
@@ -11,6 +11,9 @@ import useGetOtherUsers from './customHooks/getOtherUsers';
 import { io } from "socket.io-client";
 import { setOnlineUsers } from './redux/userSlice';
 
+// ✅ Use VITE_SERVER_URL from environment, fallback to localhost for development
+const serverUrl = import.meta.env.VITE_SERVER_URL || "http://localhost:8000";
+
 function App() {
   const dispatch = useDispatch();
 
@@ -20,21 +23,12 @@ function App() {
 
   const { userData } = useSelector(state => state.user || {});
 
-  // Log userData
+  // Socket connection with dynamic URL
   useEffect(() => {
-    
-  }, [userData]);
+    if (!userData?._id) return;
 
-  // Socket connection - with detailed logging
-  useEffect(() => {
-    if (!userData?._id) {
-      return;
-    }
-
-    
-    
     // Initialize socket connection
-    const socket = io("http://localhost:8000", {
+    const socket = io(serverUrl, {      // ✅ Use serverUrl here
       auth: { userId: userData._id },
       transports: ["websocket", "polling"],
       reconnection: true,
@@ -43,44 +37,13 @@ function App() {
       timeout: 20000
     });
 
-    // Save to window for global access
     window.chatSocket = socket;
 
-    // Connection events
-    socket.on("connect", () => {
-     
-    });
-
-    socket.on("connect_error", (error) => {
-      
-    });
-
-    socket.on("disconnect", (reason) => {
-      
-    });
-
-    socket.on("reconnect", (attemptNumber) => {
-      
-    });
-
-    socket.on("reconnect_error", (error) => {
-     
-    });
-
-    // Listen for online users updates
     socket.on("getOnlineUsers", (users) => {
-      
       dispatch(setOnlineUsers(users));
     });
 
-    // Test event
-    socket.on("test", (data) => {
-      
-    });
-
-    // Cleanup
     return () => {
-      
       if (socket) {
         socket.disconnect();
         window.chatSocket = null;
@@ -90,22 +53,10 @@ function App() {
 
   return (
     <Routes>
-      <Route 
-        path="/login" 
-        element={!userData ? <Login /> : <Navigate to="/" />} 
-      />
-      <Route 
-        path="/signup" 
-        element={!userData ? <SignUp /> : <Navigate to="/profile" />} 
-      />
-      <Route 
-        path="/" 
-        element={userData ? <Home /> : <Navigate to="/login" />} 
-      />
-      <Route 
-        path="/profile" 
-        element={userData ? <Profile /> : <Navigate to="/signup" />} 
-      />
+      <Route path="/login" element={!userData ? <Login /> : <Navigate to="/" />} />
+      <Route path="/signup" element={!userData ? <SignUp /> : <Navigate to="/profile" />} />
+      <Route path="/" element={userData ? <Home /> : <Navigate to="/login" />} />
+      <Route path="/profile" element={userData ? <Profile /> : <Navigate to="/signup" />} />
     </Routes>
   );
 }

@@ -6,6 +6,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { setUserData } from '../redux/userSlice';   
+import { serverUrl } from '../main';
 
 const Profile = () => {
     const navigate = useNavigate();
@@ -45,10 +46,7 @@ const Profile = () => {
                 formData.append("image", backendImage);   
             }
 
-            const result = await axios.put("http://localhost:8000/api/user/profile", formData, {
-                withCredentials: true,
-                headers: { 'Content-Type': 'multipart/form-data' }
-            });
+            const result = await axios.put(`${serverUrl}/api/user/profile`, formData, { withCredentials: true, headers: { 'Content-Type': 'multipart/form-data' } })
             
             
             
