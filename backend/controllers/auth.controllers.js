@@ -2,10 +2,8 @@ import genToken from "../config/token.js";
 import User from "../models/user.model.js";
 import bcrypt from "bcryptjs";
 
-
 export const signUp = async (req, res) => {
   try {
-    
     const userName = req.body.userName?.trim().toLowerCase();
     const email = req.body.email?.trim().toLowerCase();
     const password = req.body.password;
@@ -14,19 +12,16 @@ export const signUp = async (req, res) => {
       return res.status(400).json({ message: "all fields are required" });
     }
 
-    
     const checkUserByUserName = await User.findOne({ userName });
     if (checkUserByUserName) {
       return res.status(400).json({ message: "userName already exist" });
     }
 
-   
     const checkUserByEmail = await User.findOne({ email });
     if (checkUserByEmail) {
       return res.status(400).json({ message: "email already exist" });
     }
 
-    
     if (password.length < 6) {
       return res.status(400).json({
         message: "password must be at least 6 character",
@@ -43,13 +38,14 @@ export const signUp = async (req, res) => {
 
     const token = await genToken(user._id);
 
-  res.cookie("token", token, {
-  httpOnly: true,
-  maxAge: 7 * 24 * 60 * 60 * 1000,
-  sameSite: 'none',
-  secure: true,
-  domain: '.onrender.com'
-});
+    
+    res.cookie("Token", token, {
+      httpOnly: true,
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+      sameSite: 'none',
+      secure: true,
+      domain: '.onrender.com'
+    });
 
     return res.status(201).json(user);
 
@@ -57,7 +53,6 @@ export const signUp = async (req, res) => {
     return res.status(500).json({ message: `signup error ${error.message}` });
   }
 };
-
 
 export const Login = async (req, res) => {
   try {
@@ -76,13 +71,14 @@ export const Login = async (req, res) => {
 
     const token = await genToken(user._id);
 
- res.cookie("token", token, {
-  httpOnly: true,
-  maxAge: 7 * 24 * 60 * 60 * 1000,
-  sameSite: 'none',
-  secure: true,
-  domain: '.onrender.com'
-});
+    
+    res.cookie("Token", token, {
+      httpOnly: true,
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+      sameSite: 'none',
+      secure: true,
+      domain: '.onrender.com'
+    });
 
     return res.status(200).json(user);
 
@@ -91,10 +87,10 @@ export const Login = async (req, res) => {
   }
 };
 
-
 export const logOut = async (req, res) => {
   try {
-    res.clearCookie("token");
+    
+    res.clearCookie("Token");
     return res.status(200).json({ message: "log out successfully" });
   } catch (error) {
     return res.status(500).json({ message: `logout error ${error.message}` });
