@@ -5,7 +5,7 @@ import User from "../models/user.model.js";
 
 const authRouter = express.Router();
 
-
+// Signup route
 authRouter.post("/signup", async (req, res) => {
   try {
     const { userName, email, password } = req.body;
@@ -17,16 +17,24 @@ authRouter.post("/signup", async (req, res) => {
     const user = new User({ userName, email, password: hashed });
     await user.save();
 
-    
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: "7d" });
-    res.cookie("token", token, { httpOnly: true, sameSite: "lax" });
+    
+    // Cookie options for cross-site (production) and local development
+    const isProduction = process.env.NODE_ENV === "production";
+    res.cookie("token", token, {
+      httpOnly: true,
+      sameSite: isProduction ? "none" : "lax",   // "none" for cross-site, "lax" for local
+      secure: isProduction,                       // true only on HTTPS (Render)
+      maxAge: 7 * 24 * 60 * 60 * 1000
+    });
+
     res.status(201).json({ _id: user._id, userName: user.userName, email: user.email, image: user.image });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
 });
 
-
+// Login route
 authRouter.post("/login", async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -37,16 +45,28 @@ authRouter.post("/login", async (req, res) => {
     if (!match) return res.status(400).json({ message: "Invalid credentials" });
 
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: "7d" });
-    res.cookie("token", token, { httpOnly: true, sameSite: "lax" });
+    
+    const isProduction = process.env.NODE_ENV === "production";
+    res.cookie("token", token, {
+      httpOnly: true,
+      sameSite: isProduction ? "none" : "lax",
+      secure: isProduction,
+      maxAge: 7 * 24 * 60 * 60 * 1000
+    });
+
     res.json({ _id: user._id, userName: user.userName, email: user.email, image: user.image });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
 });
 
-
+// Logout route
 authRouter.get("/logout", (req, res) => {
-  res.clearCookie("token");
+  res.clearCookie("token", {
+    httpOnly: true,
+    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+    secure: process.env.NODE_ENV === "production"
+  });
   res.json({ message: "Logged out" });
 });
 
