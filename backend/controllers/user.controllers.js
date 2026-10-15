@@ -9,7 +9,10 @@ export const editProfile = async (req, res) => {
       return res.status(401).json({ message: "Unauthorized - User ID missing" });
     }
 
-    const { name } = req.body;
+    const name = typeof req.body.name === 'string' ? req.body.name.trim() : '';
+    if (name.length > 40) {
+      return res.status(400).json({ message: "Display names must be 40 characters or fewer." });
+    }
     let imageUrl = undefined;
 
     
@@ -44,7 +47,7 @@ export const editProfile = async (req, res) => {
     return res.status(200).json(updatedUser);
   } catch (error) {
     console.error("Edit profile error:", error);
-    return res.status(500).json({ message: `Server error: ${error.message}` });
+    return res.status(500).json({ message: "Unable to update your profile right now." });
   }
 };
 
@@ -64,7 +67,7 @@ export const getCurrentUser = async (req, res) => {
     return res.status(200).json(user);
   } catch (error) {
     console.error("Get current user error:", error);
-    return res.status(500).json({ message: `Server error: ${error.message}` });
+    return res.status(500).json({ message: "Unable to load your profile right now." });
   }
 };
 
@@ -81,6 +84,6 @@ export const getOtherUsers = async (req, res) => {
     return res.status(200).json(users);
   } catch (error) {
     console.error("Get other users error:", error);
-    return res.status(500).json({ message: `Server error: ${error.message}` });
+    return res.status(500).json({ message: "Unable to load contacts right now." });
   }
 };

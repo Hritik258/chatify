@@ -22,10 +22,10 @@ const storage = multer.diskStorage({
 
 // File filter - sirf images allow karein
 const fileFilter = (req, file, cb) => {
-    if (file.mimetype.startsWith('image/')) {
+    if (['image/jpeg', 'image/png', 'image/gif', 'image/webp'].includes(file.mimetype)) {
         cb(null, true);
     } else {
-        cb(new Error('Only image files are allowed!'), false);
+        cb(new Error('Use a JPEG, PNG, GIF, or WebP image.'), false);
     }
 };
 

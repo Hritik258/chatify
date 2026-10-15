@@ -8,9 +8,10 @@ import { store } from './redux/store.js'
 import axios from "axios"
 
 // ✅ Use VITE_SERVER_URL from environment, fallback to localhost for development
-export const serverUrl = import.meta.env.VITE_SERVER_URL || "http://localhost:8000"
+export const serverUrl = import.meta.env.VITE_SERVER_URL || "http://localhost:5000"
 
 axios.defaults.withCredentials = true
+axios.defaults.timeout = 15000
 
 createRoot(document.getElementById('root')).render(
   <BrowserRouter>

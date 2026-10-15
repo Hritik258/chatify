@@ -1,10 +1,10 @@
 import axios from "axios"
 import { useEffect } from "react"
 import { useDispatch, useSelector } from "react-redux"
-import { setOtherUser, setUserData } from "../redux/userSlice"
+import { setUserData } from "../redux/userSlice"
 import { serverUrl } from "../main"
 
-const getOtherUsers = () => {
+const useGetCurrentUser = () => {
   const dispatch = useDispatch()
   const { userData } = useSelector((state) => state.user)
 
@@ -12,19 +12,22 @@ const getOtherUsers = () => {
     const fetchUser = async () => {
       try {
         const result = await axios.get(
-          `${serverUrl}/api/user/others`,
+          `${serverUrl}/api/user/current`,
           { withCredentials: true }
         )
-        dispatch(setOtherUser(result.data))
+        dispatch(setUserData(result.data))
       } catch (error) {
-        console.log(error)
+        dispatch(setUserData(null));
+        if (!error.response) console.error("Unable to reach Chatify API", error.message);
       }
     }
 
     if (!userData) {
       fetchUser()
     }
-  }, [userData])
+  }, [dispatch, userData])
+
+  return null
 }
 
-export default getOtherUsers 
+export default useGetCurrentUser

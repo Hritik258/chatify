@@ -4,6 +4,7 @@ const userSlice = createSlice({
   name: "user",
   initialState: {
     userData: null,
+    authChecked: false,
     otherUsers: null,
     selectedUser:null,
     socket:null,
@@ -12,6 +13,7 @@ const userSlice = createSlice({
   reducers: {  
     setUserData: (state, action) => {
       state.userData = action.payload;
+      state.authChecked = true;
     },
     setOtherUser: (state, action) => {
       state.otherUsers = action.payload;
