@@ -29,7 +29,8 @@ function App() {
     const socket = io(serverUrl, {
       autoConnect: false,
       withCredentials: true,
-      transports: ["websocket", "polling"],
+      // Start with Socket.IO's default polling transport, then upgrade to
+      // WebSocket when the browser/network supports it.
       reconnection: true,
       reconnectionAttempts: 10,
       reconnectionDelay: 1000,

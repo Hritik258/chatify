@@ -12,7 +12,9 @@ import dp from '../assets/dp.webp';
 const isOnline = (onlineUsers, id) => onlineUsers?.some((entry) => typeof entry === 'string' ? entry === id : entry?._id === id);
 
 function Sidebar({ socket }) {
-  const { userData, otherUsers = [], selectedUser, onlineUsers = [] } = useSelector((state) => state.user);
+  const { userData, otherUsers, selectedUser, onlineUsers } = useSelector((state) => state.user);
+  const safeOtherUsers = Array.isArray(otherUsers) ? otherUsers : [];
+  const safeOnlineUsers = Array.isArray(onlineUsers) ? onlineUsers : [];
   const [search, setSearch] = useState('');
   const [groups, setGroups] = useState([]);
   const [groupModal, setGroupModal] = useState(false);
@@ -28,7 +30,7 @@ function Sidebar({ socket }) {
   useEffect(() => {
     let active = true;
     axios.get(`${serverUrl}/api/message/groups`, { withCredentials: true })
-      .then(({ data }) => { if (active) setGroups(data); })
+      .then(({ data }) => { if (active) setGroups(Array.isArray(data) ? data : []); })
       .catch(() => {});
     return () => { active = false; };
   }, []);
@@ -41,9 +43,9 @@ function Sidebar({ socket }) {
   }, [socket]);
 
   const term = search.trim().toLowerCase();
-  const users = useMemo(() => [...otherUsers]
+  const users = useMemo(() => [...safeOtherUsers]
     .filter((user) => !term || `${user.userName || ''} ${user.name || ''}`.toLowerCase().includes(term))
-    .sort((a, b) => Number(isOnline(onlineUsers, b._id)) - Number(isOnline(onlineUsers, a._id))), [otherUsers, onlineUsers, term]);
+    .sort((a, b) => Number(isOnline(safeOnlineUsers, b._id)) - Number(isOnline(safeOnlineUsers, a._id))), [safeOtherUsers, safeOnlineUsers, term]);
   const visibleGroups = useMemo(() => groups.filter((group) => !term || group.name.toLowerCase().includes(term)), [groups, term]);
   const imageUrl = (image) => !image ? dp : image.startsWith('http') ? image : `${serverUrl}${image}`;
 
@@ -76,7 +78,7 @@ function Sidebar({ socket }) {
     setGroupError('');
     try {
       const { data } = await axios.post(`${serverUrl}/api/message/groups`, { name: groupName, participants: selectedMembers }, { withCredentials: true });
-      setGroups((current) => [data, ...current]);
+      setGroups((current) => [data, ...(Array.isArray(current) ? current : [])]);
       dispatch(setSelectedUsers(data));
       setGroupModal(false);
       setGroupName('');
@@ -99,10 +101,10 @@ function Sidebar({ socket }) {
         <section className="sidebar-welcome"><p className="eyebrow">YOUR SPACE</p><h1>Hey, {userData?.name || userData?.userName || 'there'} <span aria-hidden="true">✦</span></h1><p>Good conversations start here.</p></section>
 
         <section className="online-section" aria-label="Online contacts">
-          <div className="section-heading"><span>Online now</span><span className="online-count">{onlineUsers.filter((entry) => otherUsers.some((user) => user._id === (typeof entry === 'string' ? entry : entry?._id))).length}</span></div>
+          <div className="section-heading"><span>Online now</span><span className="online-count">{safeOnlineUsers.filter((entry) => safeOtherUsers.some((user) => user._id === (typeof entry === 'string' ? entry : entry?._id))).length}</span></div>
           <div className="online-avatars">
-            {otherUsers.filter((user) => isOnline(onlineUsers, user._id)).slice(0, 8).map((user) => <button className="online-avatar" key={user._id} title={user.userName} onClick={() => dispatch(setSelectedUsers(user))}><img src={imageUrl(user.image)} alt={user.userName} onError={(event) => { event.currentTarget.src = dp; }} /><span /></button>)}
-            {!onlineUsers.length && <span className="muted-copy">Friends online will appear here</span>}
+            {safeOtherUsers.filter((user) => isOnline(safeOnlineUsers, user._id)).slice(0, 8).map((user) => <button className="online-avatar" key={user._id} title={user.userName} onClick={() => dispatch(setSelectedUsers(user))}><img src={imageUrl(user.image)} alt={user.userName} onError={(event) => { event.currentTarget.src = dp; }} /><span /></button>)}
+            {!safeOnlineUsers.length && <span className="muted-copy">Friends online will appear here</span>}
           </div>
         </section>
 
@@ -112,7 +114,7 @@ function Sidebar({ socket }) {
           <div className="contact-list">
             {visibleGroups.map((group) => <button key={group._id} className={`contact-row ${selectedUser?._id === group._id ? 'contact-row--active' : ''}`} onClick={() => dispatch(setSelectedUsers({ ...group, isGroup: true }))} aria-current={selectedUser?._id === group._id ? 'true' : undefined}><span className="group-avatar">👥</span><span className="contact-meta"><strong>{group.name}</strong><small>{group.participants?.length || 0} members · Group</small></span></button>)}
             {users.map((user) => {
-              const online = isOnline(onlineUsers, user._id);
+              const online = isOnline(safeOnlineUsers, user._id);
               const active = !selectedUser?.isGroup && selectedUser?._id === user._id;
               return <button key={user._id} className={`contact-row ${active ? 'contact-row--active' : ''}`} onClick={() => dispatch(setSelectedUsers(user))} aria-current={active ? 'true' : undefined}>
                 <span className="contact-avatar"><img src={imageUrl(user.image)} alt="" onError={(event) => { event.currentTarget.src = dp; }} /><i className={online ? 'is-online' : ''} /></span>
@@ -133,7 +135,7 @@ function Sidebar({ socket }) {
           <div className="group-modal-heading"><div><p className="eyebrow">MAKE A SPACE TOGETHER</p><h2>New group</h2></div><button type="button" onClick={() => setGroupModal(false)} aria-label="Close">×</button></div>
           <label className="group-name-field">Group name<input required minLength={2} maxLength={60} value={groupName} onChange={(event) => setGroupName(event.target.value)} placeholder="Weekend plans" /></label>
           <p className="group-members-title">Add people <span>{selectedMembers.length} selected</span></p>
-          <div className="group-member-list">{otherUsers.map((user) => <label className="group-member-choice" key={user._id}><input type="checkbox" checked={selectedMembers.includes(user._id)} onChange={() => toggleMember(user._id)} /><img src={imageUrl(user.image)} alt="" onError={(event) => { event.currentTarget.src = dp; }} /><span>{user.name || user.userName}<small>@{user.userName}</small></span></label>)}</div>
+          <div className="group-member-list">{safeOtherUsers.map((user) => <label className="group-member-choice" key={user._id}><input type="checkbox" checked={selectedMembers.includes(user._id)} onChange={() => toggleMember(user._id)} /><img src={imageUrl(user.image)} alt="" onError={(event) => { event.currentTarget.src = dp; }} /><span>{user.name || user.userName}<small>@{user.userName}</small></span></label>)}</div>
           {groupError && <p className="composer-error" role="alert">{groupError}</p>}
           <button className="profile-submit" type="submit" disabled={creatingGroup}>{creatingGroup ? 'Creating…' : 'Create group'}</button>
         </form>

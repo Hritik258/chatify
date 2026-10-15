@@ -15,14 +15,16 @@ const useGetOtherUsers = () => {
           `${serverUrl}/api/user/others`,
           { withCredentials: true }
         )
-        dispatch(setOtherUser(result.data))
+        dispatch(setOtherUser(Array.isArray(result.data) ? result.data : []))
       } catch (error) {
         console.log(error)
       }
     }
 
-    if (!userData) {
+    if (userData?._id) {
       fetchUser()
+    } else {
+      dispatch(setOtherUser([]))
     }
   }, [userData, dispatch])
 }
